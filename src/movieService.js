@@ -36,15 +36,14 @@ function getMoviesByYear(year_1) {
                     language: 'en-US',
                     sort_by: 'popularity.desc',
                     page: page,
-                    primary_release_year: year,
-                },
+                    primary_release_year: year
+                }
             });
             const movies = yield Promise.all(discoverResponse.data.results.map((movie) => __awaiter(this, void 0, void 0, function* () {
                 try {
                     const creditsResponse = yield axios_1.default.get(`${BASE_URL}/movie/${movie.id}/credits`, {
-                        params: { api_key: API_KEY },
+                        params: { api_key: API_KEY }
                     });
-                    // Extract editors from the crew
                     const editors = creditsResponse.data.crew
                         .filter((member) => member.known_for_department === 'Editing')
                         .map((editor) => editor.name);
@@ -54,24 +53,24 @@ function getMoviesByYear(year_1) {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric',
-                            timeZone: 'UTC',
+                            timeZone: 'UTC'
                         }),
                         vote_average: movie.vote_average,
-                        editors,
+                        editors
                     };
                 }
                 catch (error) {
                     console.error(`Error fetching credits for movie ${movie.id}:`, error);
-                    // Return the movie without editor information if the credits API fails
                     return {
                         title: movie.title,
                         release_date: new Date(movie.release_date).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric',
+                            timeZone: 'UTC'
                         }),
                         vote_average: movie.vote_average,
-                        editors: [],
+                        editors: []
                     };
                 }
             })));
@@ -85,6 +84,7 @@ function getMoviesByYear(year_1) {
 }
 // Example usage
 if (require.main === module) {
+    ;
     (() => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const movies = yield getMoviesByYear('2019', 1); // Fetch page 1 of movies for 2019
