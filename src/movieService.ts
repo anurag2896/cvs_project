@@ -17,6 +17,62 @@ if (!API_KEY) {
     throw new Error('TMDB_API_KEY is not defined in the environment variables.')
 }
 
+
+/**
+ * Fetched editor imformation of Movie.
+ * @param movieId The movieId to fetch editor information for.
+ * @returns Promise<string[]>
+ */
+async function getEditors(movieId: number): Promise<string[]> {
+    try {
+        const creditsResponse = await axios.get<CreditsResponse>(
+            `${BASE_URL}/movie/${movieId}/credits`,
+            {
+                params: { api_key: API_KEY }
+            }
+        )
+
+        return creditsResponse.data.crew
+            .filter(
+                (member: CrewMember) =>
+                    member.known_for_department === 'Editing'
+            )
+            .map((editor: CrewMember) => editor.name)
+
+        
+    } catch (error) {
+        console.error(
+            `Error fetching credits for movie ${movieId}:`,
+            error
+        )
+        return []
+    }
+}
+
+/**
+ * Sets editor imformation of Movie.
+ * @param movie The movie to set editor information for.
+ * @returns Promise<Movie[]>
+ */
+async function setMovieEditors(movie: DiscoverMovie): Promise<Movie> {
+    const editors = await getEditors(movie.id)
+
+    return {
+        title: movie.title,
+        release_date: new Date(
+            movie.release_date
+        ).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            timeZone: 'UTC'
+        }),
+        vote_average: movie.vote_average,
+        editors
+    }
+}
+
+
 /**
  * Fetch movies by a year and page number.
  * @param year The year to fetch movies for.
@@ -24,11 +80,11 @@ if (!API_KEY) {
  * @returns Promise<Movie[]>
  */
 export async function getMoviesByYear(
-    year: string,
+    year: number,
     page: number = 1
 ): Promise<Movie[]> {
     try {
-        const discoverResponse = await axios.get<DiscoverMovieResponse>(
+        const movieResponse = await axios.get<DiscoverMovieResponse>(
             `${BASE_URL}/discover/movie`,
             {
                 params: {
@@ -41,59 +97,9 @@ export async function getMoviesByYear(
             }
         )
 
-        const movies: Movie[] = await Promise.all(
-            discoverResponse.data.results.map(async (movie: DiscoverMovie) => {
-                try {
-                    const creditsResponse = await axios.get<CreditsResponse>(
-                        `${BASE_URL}/movie/${movie.id}/credits`,
-                        {
-                            params: { api_key: API_KEY }
-                        }
-                    )
+        let moviePromiseArray = movieResponse.data.results.map(movie => setMovieEditors(movie))
 
-                    const editors = creditsResponse.data.crew
-                        .filter(
-                            (member: CrewMember) =>
-                                member.known_for_department === 'Editing'
-                        )
-                        .map((editor: CrewMember) => editor.name)
-
-                    return {
-                        title: movie.title,
-                        release_date: new Date(
-                            movie.release_date
-                        ).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            timeZone: 'UTC'
-                        }),
-                        vote_average: movie.vote_average,
-                        editors
-                    }
-                } catch (error) {
-                    console.error(
-                        `Error fetching credits for movie ${movie.id}:`,
-                        error
-                    )
-                    return {
-                        title: movie.title,
-                        release_date: new Date(
-                            movie.release_date
-                        ).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            timeZone: 'UTC'
-                        }),
-                        vote_average: movie.vote_average,
-                        editors: []
-                    }
-                }
-            })
-        )
-
-        return movies
+        return await Promise.all(moviePromiseArray)
     } catch (error) {
         console.error('Error fetching movies:', error)
         throw error

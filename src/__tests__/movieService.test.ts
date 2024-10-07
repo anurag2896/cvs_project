@@ -34,7 +34,6 @@ describe('movieService', () => {
             }
         }
 
-        // Mocking the axios get function for both calls
         mockedAxios.get.mockImplementation((url: string) => {
             if (url.includes('/discover/movie')) {
                 return Promise.resolve(mockDiscoverResponse)
@@ -44,7 +43,7 @@ describe('movieService', () => {
             return Promise.reject(new Error('Not found'))
         })
 
-        const result = await getMoviesByYear('2019', 1)
+        const result = await getMoviesByYear(2019, 1)
         expect(result).toEqual([
             {
                 title: 'Test Movie',
@@ -56,10 +55,10 @@ describe('movieService', () => {
     })
 
     it('should handle API errors', async () => {
-        // Mock rejection of API calls
+        // Mocking rejection of API calls
         mockedAxios.get.mockRejectedValue(new Error('API Error'))
 
-        await expect(getMoviesByYear('2019', 1)).rejects.toThrow('API Error')
+        await expect(getMoviesByYear(2019, 1)).rejects.toThrow('API Error')
     })
 
     it('should handle missing editors', async () => {
@@ -93,7 +92,7 @@ describe('movieService', () => {
             return Promise.reject(new Error('Not found'))
         })
 
-        const result = await getMoviesByYear('2019', 1)
+        const result = await getMoviesByYear(2019, 1)
         expect(result[0].editors).toEqual([])
         expect(result).toEqual([
             {
@@ -128,7 +127,7 @@ describe('movieService', () => {
             return Promise.reject(new Error('Not found'))
         })
 
-        const result = await getMoviesByYear('2019', 1)
+        const result = await getMoviesByYear(2019, 1)
         expect(result[0].editors).toEqual([])
         expect(result).toEqual([
             {
