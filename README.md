@@ -4,7 +4,7 @@
 
 Create a .env file in the root directory of the project
 
-Add your TMDB API key to the .env file like this:
+Add your TMDB API key to the ```.env``` file like this:
 ```TMDB_API_KEY=<YOUR KEY>```
 
 #Running the Application
